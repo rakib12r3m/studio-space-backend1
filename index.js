@@ -51,6 +51,13 @@ app.get('/studios/:id', async (req, res)=>{
   res.send(result)
 })
 
+// ---
+app.get('/featured-studios', async (req, res) => {
+  const result = await studioCollection.find().toArray();
+  res.send(result);
+});
+// ---
+
 // studio listing
   app.get('/my-listings/:email', async (req, res) => {
   try {
