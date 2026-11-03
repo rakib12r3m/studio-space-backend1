@@ -43,11 +43,28 @@ app.get('/studios',async (req, res) => {
 })
 
 
+
+
 app.get('/studios/:id', async (req, res)=>{
   const {id} =  req.params 
   const result = await studioCollection.findOne({_id: new ObjectId(id)})
   res.send(result)
 })
+
+// studio listing
+  app.get('/my-listings/:email', async (req, res) => {
+  try {
+    const { email } = req.params;
+
+    const result = await studioCollection
+      .find({ ownerEmail: email })
+      .toArray();
+
+    res.send(result);
+  } catch (error) {
+    res.status(500).send({ message: "Failed to fetch listings" });
+  }
+});
 
 app.post('/bookings', async (req, res) => {
   const data = req.body
@@ -60,6 +77,19 @@ app.get('/my-bookings/:email', async(req, res)=>{
   const result = await bookingCollection.find({email:email}).toArray()
   res.send(result)
 })
+
+// ------------------
+app.get('/bookings/:id/:date', async (req, res) => {
+  const { id, date } = req.params;
+
+  const result = await bookingCollection.find({
+    id: id,
+    bookingDate: date
+  }).toArray();
+
+  res.send(result);
+});
+// -------------------
 
 
 // http://localhost:8000/my-bookings/:email
