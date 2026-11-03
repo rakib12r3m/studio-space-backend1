@@ -53,8 +53,19 @@ app.get('/studios/:id', async (req, res)=>{
 
 // ---
 app.get('/featured-studios', async (req, res) => {
-  const result = await studioCollection.find().toArray();
-  res.send(result);
+  try {
+    const result = await studioCollection
+      .find()
+      .sort({ rating: -1, _id: -1 })
+      .limit(6)
+      .toArray();
+
+    res.send(result);
+  } catch (error) {
+    res.status(500).send({
+      message: "Failed to fetch featured studios"
+    });
+  }
 });
 // ---
 
