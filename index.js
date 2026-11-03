@@ -177,6 +177,31 @@ app.get('/my-bookings/:email', async(req, res)=>{
   res.send(result)
 })
 
+// -----delete booking
+app.delete('/bookings/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { email } = req.query;
+
+    if (!ObjectId.isValid(id)) {
+      return res.status(400).send({ message: "Invalid booking ID" });
+    }
+
+    const result = await bookingCollection.deleteOne({
+      _id: new ObjectId(id),
+      email: email
+    });
+
+    if (!result.deletedCount) {
+      return res.status(404).send({ message: "Booking not found" });
+    }
+
+    res.send({ message: "Booking cancelled successfully" });
+  } catch (error) {
+    res.status(500).send({ message: "Failed to cancel booking" });
+  }
+});
+
 // ------------------
 app.get('/bookings/:id/:date', async (req, res) => {
   const { id, date } = req.params;
