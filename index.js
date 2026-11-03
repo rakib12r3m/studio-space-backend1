@@ -44,19 +44,25 @@ app.get('/studios',async (req, res) => {
 
 
 app.get('/studios/:id', async (req, res)=>{
-  const {id} = await req.params 
+  const {id} =  req.params 
   const result = await studioCollection.findOne({_id: new ObjectId(id)})
   res.send(result)
 })
 
 app.post('/bookings', async (req, res) => {
-  const data =await req.body
+  const data = req.body
   const result = await bookingCollection.insertOne(data) 
   res.send(result); 
 })
 
+app.get('/my-bookings/:email', async(req, res)=>{
+  const {email} =  req.params 
+  const result = await bookingCollection.find({email:email}).toArray()
+  res.send(result)
+})
 
-// http://localhost:8000/booking
+
+// http://localhost:8000/my-bookings/:email
 app.get('/', (req, res)=>{
   res.send({msg:"server is running..."})
 })
