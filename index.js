@@ -65,7 +65,9 @@ app.get('/studios/:id', async (req, res)=>{
     res.status(500).send({ message: "Failed to fetch listings" });
   }
 });
-// 2
+
+
+
 app.delete('/studios/:id', async (req, res) => {
   try {
     const { id } = req.params;
@@ -87,6 +89,58 @@ app.delete('/studios/:id', async (req, res) => {
     res.send({ message: "Studio deleted successfully" });
   } catch (error) {
     res.status(500).send({ message: "Failed to delete studio" });
+  }
+});
+
+
+app.patch('/studios/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { email } = req.query;
+
+    if (!ObjectId.isValid(id)) {
+      return res.status(400).send({ message: "Invalid studio ID" });
+    }
+
+    const {
+      title,
+      category,
+      location,
+      hourlyRate,
+      securityDeposit,
+      maxCapacity,
+      imageUrl,
+      amenities,
+      overview
+    } = req.body;
+
+    const result = await studioCollection.updateOne(
+      {
+        _id: new ObjectId(id),
+        ownerEmail: email
+      },
+      {
+        $set: {
+          title,
+          category,
+          location,
+          hourlyRate,
+          securityDeposit,
+          maxCapacity,
+          imageUrl,
+          amenities,
+          overview
+        }
+      }
+    );
+
+    if (!result.matchedCount) {
+      return res.status(404).send({ message: "Studio not found" });
+    }
+
+    res.send({ message: "Studio updated successfully" });
+  } catch (error) {
+    res.status(500).send({ message: "Failed to update studio" });
   }
 });
 
