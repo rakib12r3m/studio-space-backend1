@@ -65,6 +65,33 @@ app.get('/studios/:id', async (req, res)=>{
     res.status(500).send({ message: "Failed to fetch listings" });
   }
 });
+// 2
+app.delete('/studios/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { email } = req.query;
+
+    if (!ObjectId.isValid(id)) {
+      return res.status(400).send({ message: "Invalid studio ID" });
+    }
+
+    const result = await studioCollection.deleteOne({
+      _id: new ObjectId(id),
+      ownerEmail: email
+    });
+
+    if (!result.deletedCount) {
+      return res.status(404).send({ message: "Studio not found" });
+    }
+
+    res.send({ message: "Studio deleted successfully" });
+  } catch (error) {
+    res.status(500).send({ message: "Failed to delete studio" });
+  }
+});
+
+
+// end here
 
 app.post('/bookings', async (req, res) => {
   const data = req.body
