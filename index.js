@@ -165,18 +165,61 @@ app.patch('/studios/:id', async (req, res) => {
 
 // end here
 
+// app.post('/bookings', async (req, res) => {
+//   const data = req.body
+//   const result = await bookingCollection.insertOne(data) 
+//   res.send(result); 
+// })
 app.post('/bookings', async (req, res) => {
-  const data = req.body
-  const result = await bookingCollection.insertOne(data) 
-  res.send(result); 
-})
+  try {
+    const data = req.body;
 
-app.get('/my-bookings/:email', async(req, res)=>{
-  const {email} =  req.params 
-  const result = await bookingCollection.find({email:email}).toArray()
-  res.send(result)
-})
+    const bookingData = {
+      ...data,
+      status: "Pending",
+    };
 
+    const result = await bookingCollection.insertOne(bookingData);
+
+    res.status(201).send({
+      message: "Booking created successfully",
+      insertedId: result.insertedId,
+      status: "Pending",
+    });
+  } catch (error) {
+    res.status(500).send({
+      message: "Failed to create booking",
+    });
+  }
+});
+// --
+
+
+
+// app.get('/my-bookings/:email', async(req, res)=>{
+//   const {email} =  req.params 
+//   const result = await bookingCollection.find({email:email}).toArray()
+//   res.send(result)
+// })
+app.get('/my-bookings/:email', async (req, res) => {
+  try {
+    const { email } = req.params;
+
+    const result = await bookingCollection
+      .find({ email: email })
+      .sort({ _id: -1 })
+      .toArray();
+
+    res.send(result);
+  } catch (error) {
+    res.status(500).send({
+      message: "Failed to fetch bookings",
+    });
+  }
+});
+// --
+
+// -----delete booking
 // -----delete booking
 app.delete('/bookings/:id', async (req, res) => {
   try {
@@ -184,23 +227,109 @@ app.delete('/bookings/:id', async (req, res) => {
     const { email } = req.query;
 
     if (!ObjectId.isValid(id)) {
-      return res.status(400).send({ message: "Invalid booking ID" });
+      return res.status(400).send({
+        message: "Invalid booking ID",
+      });
+    }
+
+    if (!email) {
+      return res.status(400).send({
+        message: "Email is required",
+      });
     }
 
     const result = await bookingCollection.deleteOne({
       _id: new ObjectId(id),
-      email: email
+      email: email,
     });
 
     if (!result.deletedCount) {
-      return res.status(404).send({ message: "Booking not found" });
+      return res.status(404).send({
+        message: "Booking not found",
+      });
     }
 
-    res.send({ message: "Booking cancelled successfully" });
+    res.send({
+      success: true,
+      message: "Booking deleted successfully",
+    });
   } catch (error) {
-    res.status(500).send({ message: "Failed to cancel booking" });
+    res.status(500).send({
+      message: "Failed to delete booking",
+    });
   }
 });
+// app.delete('/bookings/:id', async (req, res) => {
+//   try {
+//     const { id } = req.params;
+//     const { email } = req.query;
+
+//     if (!ObjectId.isValid(id)) {
+//       return res.status(400).send({ message: "Invalid booking ID" });
+//     }
+
+//     const result = await bookingCollection.deleteOne({
+//       _id: new ObjectId(id),
+//       email: email
+//     });
+
+//     if (!result.deletedCount) {
+//       return res.status(404).send({ message: "Booking not found" });
+//     }
+
+//     res.send({ message: "Booking cancelled successfully" });
+//   } catch (error) {
+//     res.status(500).send({ message: "Failed to cancel booking" });
+//   }
+// });
+app.patch('/bookings/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { email } = req.query;
+    const { status } = req.body;
+
+    if (!ObjectId.isValid(id)) {
+      return res.status(400).send({
+        message: "Invalid booking ID",
+      });
+    }
+
+    if (status !== "Cancelled") {
+      return res.status(400).send({
+        message: "Invalid booking status",
+      });
+    }
+
+    const result = await bookingCollection.updateOne(
+      {
+        _id: new ObjectId(id),
+        email: email,
+        status: "Pending",
+      },
+      {
+        $set: {
+          status: "Cancelled",
+        },
+      }
+    );
+
+    if (!result.matchedCount) {
+      return res.status(404).send({
+        message: "Booking not found or cannot be cancelled",
+      });
+    }
+
+    res.send({
+      message: "Booking cancelled successfully",
+      status: "Cancelled",
+    });
+  } catch (error) {
+    res.status(500).send({
+      message: "Failed to cancel booking",
+    });
+  }
+});
+// --
 
 // ---------------
 app.get('/bookings/:id/:date', async (req, res) => {
