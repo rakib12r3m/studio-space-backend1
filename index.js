@@ -163,13 +163,6 @@ app.patch('/studios/:id', async (req, res) => {
 });
 
 
-// end here
-
-// app.post('/bookings', async (req, res) => {
-//   const data = req.body
-//   const result = await bookingCollection.insertOne(data) 
-//   res.send(result); 
-// })
 app.post('/bookings', async (req, res) => {
   try {
     const data = req.body;
@@ -196,11 +189,6 @@ app.post('/bookings', async (req, res) => {
 
 
 
-// app.get('/my-bookings/:email', async(req, res)=>{
-//   const {email} =  req.params 
-//   const result = await bookingCollection.find({email:email}).toArray()
-//   res.send(result)
-// })
 app.get('/my-bookings/:email', async (req, res) => {
   try {
     const { email } = req.params;
@@ -219,8 +207,7 @@ app.get('/my-bookings/:email', async (req, res) => {
 });
 // --
 
-// -----delete booking
-// -----delete booking
+
 app.delete('/bookings/:id', async (req, res) => {
   try {
     const { id } = req.params;
@@ -259,29 +246,7 @@ app.delete('/bookings/:id', async (req, res) => {
     });
   }
 });
-// app.delete('/bookings/:id', async (req, res) => {
-//   try {
-//     const { id } = req.params;
-//     const { email } = req.query;
 
-//     if (!ObjectId.isValid(id)) {
-//       return res.status(400).send({ message: "Invalid booking ID" });
-//     }
-
-//     const result = await bookingCollection.deleteOne({
-//       _id: new ObjectId(id),
-//       email: email
-//     });
-
-//     if (!result.deletedCount) {
-//       return res.status(404).send({ message: "Booking not found" });
-//     }
-
-//     res.send({ message: "Booking cancelled successfully" });
-//   } catch (error) {
-//     res.status(500).send({ message: "Failed to cancel booking" });
-//   }
-// });
 app.patch('/bookings/:id', async (req, res) => {
   try {
     const { id } = req.params;
