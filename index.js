@@ -2,11 +2,15 @@ import express, { json } from 'express';
 import { MongoClient, ObjectId } from 'mongodb';
 import 'dotenv/config'
 import cors from 'cors'
-const app = express() 
-const PORT = 8000 
+import { createRemoteJWKSet, jwtVerify } from 'jose';
+const app = express()
+const PORT = 8000
 
 app.use(cors())
 app.use(express.json())
+
+
+
 
 const client = new MongoClient(process.env.MONGODB_URI);
 
@@ -22,32 +26,56 @@ export async function connectToMongoDB() {
 
 
 const mongoClient = await connectToMongoDB();
-const db = mongoClient.db("studio-space") 
-const studioCollection = db.collection("studio") 
+const db = mongoClient.db("studio-space")
+const studioCollection = db.collection("studio")
 const bookingCollection = db.collection("bookings")
 
 
+const verifyToken = async (req, res, next) => {
+  const authHeader = req.headers.authorization
+  if (!authHeader) {
+    return res.status(401).send({ msg: "UNauthorized" })
+  }
+  const token = authHeader.split(" ")[1]
+  if (!token) {
+    return res.status(401).send({ msg: "UNauthorized" })
+  }
 
-app.post('/add-studio', async(req, res)=>{
-const data = req.body 
-const result = await studioCollection.insertOne(data) 
+  const JWKS = createRemoteJWKSet(new URL('http://localhost:3000/api/auth/jwks'))
+  try {
+    const { payload } = await jwtVerify(token, JWKS)
+    next()
+  } catch (error) {
+    return res.status(500).send({ msg: "Server Error" })
+
+  }
+
+
+
+
+}
+
+app.post('/add-studio',verifyToken, async (req, res) => {
+  const data = req.body
+  const result = await studioCollection.insertOne(data)
   console.log(result, 'from data');
 
-    res.send(result)
+  res.send(result)
 })
 
 
-app.get('/studios',async (req, res) => {
-    const result = await studioCollection.find().toArray()
-    res.send(result)
+app.get('/studios', async (req, res) => {
+  const result = await studioCollection.find().toArray()
+  res.send(result)
 })
 
 
 
 
-app.get('/studios/:id', async (req, res)=>{
-  const {id} =  req.params 
-  const result = await studioCollection.findOne({_id: new ObjectId(id)})
+app.get('/studios/:id', async (req, res) => {
+
+  const { id } = req.params
+  const result = await studioCollection.findOne({ _id: new ObjectId(id) })
   res.send(result)
 })
 
@@ -70,7 +98,7 @@ app.get('/featured-studios', async (req, res) => {
 // ---
 
 // studio listing
-  app.get('/my-listings/:email', async (req, res) => {
+app.get('/my-listings/:email', async (req, res) => {
   try {
     const { email } = req.params;
 
@@ -86,7 +114,7 @@ app.get('/featured-studios', async (req, res) => {
 
 
 
-app.delete('/studios/:id', async (req, res) => {
+app.delete('/studios/:id',verifyToken, async (req, res) => {
   try {
     const { id } = req.params;
     const { email } = req.query;
@@ -111,7 +139,7 @@ app.delete('/studios/:id', async (req, res) => {
 });
 
 
-app.patch('/studios/:id', async (req, res) => {
+app.patch('/studios/:id',verifyToken, async (req, res) => {
   try {
     const { id } = req.params;
     const { email } = req.query;
@@ -208,7 +236,7 @@ app.get('/my-bookings/:email', async (req, res) => {
 // --
 
 
-app.delete('/bookings/:id', async (req, res) => {
+app.delete('/bookings/:id',verifyToken, async (req, res) => {
   try {
     const { id } = req.params;
     const { email } = req.query;
@@ -247,7 +275,7 @@ app.delete('/bookings/:id', async (req, res) => {
   }
 });
 
-app.patch('/bookings/:id', async (req, res) => {
+app.patch('/bookings/:id',verifyToken, async (req, res) => {
   try {
     const { id } = req.params;
     const { email } = req.query;
@@ -311,11 +339,11 @@ app.get('/bookings/:id/:date', async (req, res) => {
 
 
 // http://localhost:8000/my-bookings/:email
-app.get('/', (req, res)=>{
-  res.send({msg:"server is running..."})
+app.get('/', (req, res) => {
+  res.send({ msg: "server is running..." })
 })
 
-app.listen(PORT, ()=>{
-    console.log(`server is running on port ${PORT}`);
-    
+app.listen(PORT, () => {
+  console.log(`server is running on port ${PORT}`);
+
 })
