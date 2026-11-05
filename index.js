@@ -202,7 +202,7 @@ app.delete('/bookings/:id', async (req, res) => {
   }
 });
 
-// ------------------
+// ---------------
 app.get('/bookings/:id/:date', async (req, res) => {
   const { id, date } = req.params;
 
